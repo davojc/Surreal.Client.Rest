@@ -2,5 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src\Surreal.Client.Rest\Surreal.Client.Rest.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="Surreal.Client.Rest.Test.Integration\Surreal.Client.Rest.Test.Integration.csproj" Type="Classic C#" />
+  </Folder>
 </Solution>
