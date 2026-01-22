@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src\Surreal.Client.Rest\Surreal.Client.Rest.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
