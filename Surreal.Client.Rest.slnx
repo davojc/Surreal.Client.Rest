@@ -3,6 +3,7 @@
     <Project Path="src\Surreal.Client.Rest\Surreal.Client.Rest.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests\Surreal.Client.Rest.Test.Integration\Surreal.Client.Rest.Test.Integration.csproj" Type="Classic C#" />
+    <Project Path="tests/Surreal.Client.Rest.Test.Unit/Surreal.Client.Rest.Test.Unit.csproj" Id="29ae8cdf-91ab-467c-bd6c-5fc8e0ab28c4" />
+    <Project Path="tests\Surreal.Client.Rest.Test.Integration\Surreal.Client.Rest.Test.Integration.csproj" />
   </Folder>
 </Solution>
