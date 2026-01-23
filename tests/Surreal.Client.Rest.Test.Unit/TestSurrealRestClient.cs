@@ -1,8 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
-using RichardSzalay.MockHttp;
+﻿using RichardSzalay.MockHttp;
 using System.Net;
-using System.Text.Json;
 
 namespace Surreal.Client.Rest.Test.Unit;
 
@@ -16,43 +13,42 @@ public class TestSurrealRestClient : IClassFixture<OptionsTestFixture>
     }
 
     [Fact]
-    public async Task VerifyThatHealthWorks()
+    public async Task VerifyHealthEndpoint()
     {
-        var signinResponse = new
-        {
-            code = 1,
-            details = "Successful login",
-            token = JwtHelper.GenerateToken()
-        };
+        var mock = fixture.GetMockHandler();
 
-        var mockHttp = new MockHttpMessageHandler(BackendDefinitionBehavior.Always);
-        mockHttp.When(HttpMethod.Post, "http://test.com/signin")
-                .Respond("application/json", JsonSerializer.Serialize(signinResponse));
-
-        mockHttp.Expect(HttpMethod.Get, "http://test.com/health")
+        mock.handler.Expect(HttpMethod.Get, fixture.CreateMockPath("health"))
             .WithHeaders("Accept", "application/json")
-            .WithHeaders("Authorization", $"Bearer {signinResponse.token}")
+            .WithHeaders("Authorization", $"Bearer {mock.token}")
             .Respond(HttpStatusCode.OK);
 
-        var serviceCollection = fixture.GetServiceCollection();
-
-        serviceCollection.ConfigureAll<HttpClientFactoryOptions>(options =>
-        {
-            options.HttpMessageHandlerBuilderActions.Add(builder =>
-            {
-                builder.PrimaryHandler = mockHttp;
-            });
-        });
-
-        var provider = serviceCollection.BuildServiceProvider();
-
-        var client = provider.GetRequiredService<ISurrealRestClient>();
+        var client = fixture.GetClient(mock.handler);
 
         var result = await client.Health();
 
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
 
-        mockHttp.VerifyNoOutstandingExpectation();
+        mock.handler.VerifyNoOutstandingExpectation();
+    }
+
+    [Fact]
+    public async Task VerifyStatusEndpoint()
+    {
+        var mock = fixture.GetMockHandler();
+
+        mock.handler.Expect(HttpMethod.Get, fixture.CreateMockPath("status"))
+            .WithHeaders("Accept", "application/json")
+            .WithHeaders("Authorization", $"Bearer {mock.token}")
+            .Respond(HttpStatusCode.OK);
+
+        var client = fixture.GetClient(mock.handler);
+
+        var result = await client.Status();
+
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+
+        mock.handler.VerifyNoOutstandingExpectation();
     }
 }

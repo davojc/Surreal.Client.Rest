@@ -1,27 +1,43 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Net;
+using System.Security.Principal;
+using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
+using RichardSzalay.MockHttp;
 
 namespace Surreal.Client.Rest.Test.Unit;
 
 public class OptionsTestFixture : IDisposable
 {
-    public SurrealRestOptions Options { get; set; }
-
-    public OptionsTestFixture() 
-    {
-        Options = SurrealRestOptions.Create()
-            .WithEndpoint("http://127.0.0.1:8001")
-            .WithUsername("root")
-            .WithPassword("root")
-            .WithDatabase("test")
-            .WithDatabase("test").Build();
-    }
+    private string endPoint = "http://test.com";
 
     public void Dispose()
     {
         
     }
 
-    public ServiceCollection GetServiceCollection()
+    public string CreateMockPath(string suffix)
+    {
+        return $"{endPoint}/{suffix}";
+    }
+
+    public (MockHttpMessageHandler handler, string token) GetMockHandler()
+    {
+        var signinResponse = new
+        {
+            code = 1,
+            details = "Successful login",
+            token = JwtHelper.GenerateToken()
+        };
+
+        var mockHttp = new MockHttpMessageHandler(BackendDefinitionBehavior.Always);
+        mockHttp.When(HttpMethod.Post, CreateMockPath("signin"))
+                .Respond("application/json", JsonSerializer.Serialize(signinResponse));
+
+        return (mockHttp, signinResponse.token);
+    }
+
+    public ISurrealRestClient GetClient(MockHttpMessageHandler handler)
     {
         var services = new ServiceCollection();
         services.AddSurrealRestClient(options =>
@@ -30,9 +46,19 @@ public class OptionsTestFixture : IDisposable
             options.Namespace = "test";
             options.Password = "root";
             options.Username = "root";
-            options.Endpoint = "http://test.com";
+            options.Endpoint = endPoint;
         });
 
-        return services;
+        services.ConfigureAll<HttpClientFactoryOptions>(options =>
+        {
+            options.HttpMessageHandlerBuilderActions.Add(builder =>
+            {
+                builder.PrimaryHandler = handler;
+            });
+        });
+
+        var provider = services.BuildServiceProvider();
+
+        return provider.GetRequiredService<ISurrealRestClient>();
     }
 }
