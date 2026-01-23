@@ -59,4 +59,4 @@ nunit-*.xml
 *.user
 
 # Jetbrains
-/.idea
+.idea/
