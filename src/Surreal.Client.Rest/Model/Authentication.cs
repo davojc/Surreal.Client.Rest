@@ -18,15 +18,3 @@ public class Authentication
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenReading)]
     public object Refresh { get; set; }
 }
-
-public class Response<T>
-{
-    [JsonPropertyName("result")]
-    public T[] Result { get; set; }
-    
-    [JsonPropertyName("status")]
-    public string Status { get; set; }
-    
-    [JsonPropertyName("time")]
-    public string Time { get; set; }
-}

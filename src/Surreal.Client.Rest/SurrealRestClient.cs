@@ -1,114 +1,117 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using Surreal.Client.Rest.Model;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using System.Text.Json;
 
 namespace Surreal.Client.Rest;
 
-public class SurrealRestClient(SurrealRestOptions options, HttpClient client) : ISurrealRestClient
+public class SurrealRestClient(HttpClient client, IOptions<SurrealRestOptions> options) : ISurrealRestClient
 {
-    private string _token = string.Empty;
-    
-    public Uri Uri { get; } = new Uri(options.Endpoint);
+    private readonly JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
+    private JwtSecurityToken? _token = null;
+
+    public Uri Uri { get; } = new Uri(options.Value.Endpoint);
     
     public void Dispose()
     {
     }
     
-    public async Task<bool> Status(CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpResponse<bool>> Status(CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/status");
         
         using var response = await client.SendAsync(request, cancellationToken);
 
-        if (response.StatusCode == System.Net.HttpStatusCode.OK)
-        {
-            return true;
-        }
-
-        return false;
+        return response.ProcessBoolResponse();
     }
 
-    public async Task<bool> Health(CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpResponse<bool>> Health(CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/health");
         
         using var response = await client.SendAsync(request, cancellationToken);
 
-        if (response.StatusCode == System.Net.HttpStatusCode.OK)
-        {
-            return true;
-        }
-
-        return false;
+        return response.ProcessBoolResponse();
     }
 
-    public Task<string> Version(CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpResponse<string>> Version(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
-    }
-
-    public async Task<bool> SignIn(CancellationToken cancellationToken = default)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/signin");
-        
-        var signin = options.CreateSignIn();
-        var body= JsonSerializer.Serialize(signin);
-        request.Content = new StringContent(body, Encoding.UTF8);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/version");
         
         using var response = await client.SendAsync(request, cancellationToken);
         
+        if(!response.IsSuccessStatusCode)
+            return SurrealHttpResponse<string>.Failure("Failed to retrieve version", response.StatusCode);
+        
         var content = await response.Content.ReadAsStringAsync();
-        
-        var authentication = JsonSerializer.Deserialize<Authentication>(content);
-
-        if (authentication == null)
-            return false;
-        
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {authentication.Token}");
-        client.DefaultRequestHeaders.Add(HeaderNames.Namespace, options.Namespace);
-        client.DefaultRequestHeaders.Add(HeaderNames.Database, options.Database);
-
-        return true;
+        return SurrealHttpResponse<string>.Success(content, response.StatusCode);
     }
 
-    public async Task<IEnumerable<Response<T>>> Get<T>(string table, CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpArrayResponse<T>> Get<T>(string table, CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/key/{table}");
         
         using var response = await client.SendAsync(request, cancellationToken);
+
+        return await response.ProcessArrayResponse<T>(cancellationToken);
+    }
+
+    public async Task<SurrealHttpResponse<T>> Get<T>(string table, string id, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/key/{table}");
         
-        var content = await response.Content.ReadAsStringAsync();
+        using var response = await client.SendAsync(request, cancellationToken);
+        return await response.ProcessResponse<T>(cancellationToken);
+    }
+
+    public async Task<SurrealHttpResponse<T>> Add<T>(string table, T record, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/key/{table}");
+        var body = JsonSerializer.Serialize(record);
         
-        return JsonSerializer.Deserialize<Response<T>[]>(content);
+        request.Content = new StringContent(body, Encoding.UTF8);
+        
+        using var response = await client.SendAsync(request, cancellationToken);
+        return await response.ProcessResponse<T>(cancellationToken);
     }
 
-    public Task<T> Get<T>(string table, string id, CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpResponse<bool>> Delete(string table, string id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/key/{table}/{id}");
+        using var response = await client.SendAsync(request, cancellationToken);
+        
+        return response.ProcessBoolResponse("Failed to delete record.", cancellationToken);
     }
 
-    public Task<T> Add<T>(string table, T record, CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpResponse<bool>> Delete(string table, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/key/{table}");
+        using var response = await client.SendAsync(request, cancellationToken);
+        
+        return response.ProcessBoolResponse("Failed to delete record.", cancellationToken);
     }
 
-    public Task<bool> Delete(string table, string id, CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpResponse<T>> Update<T>(string table, T record, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/key/{table}");
+        var body = JsonSerializer.Serialize(record);
+        
+        request.Content = new StringContent(body, Encoding.UTF8);
+        
+        using var response = await client.SendAsync(request, cancellationToken);
+        return await response.ProcessResponse<T>(cancellationToken);
     }
 
-    public Task<bool> Delete(string table, CancellationToken cancellationToken = default)
+    public async Task<SurrealHttpArrayResponse<T>> Query<T>(string query, IEnumerable<KeyValuePair<string, string?>>? parameters = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
-    }
+        var url = parameters != null ? QueryHelpers.AddQueryString($"/sql", parameters) : $"/sql";
+        
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        
+        using var response = await client.SendAsync(request, cancellationToken);
 
-    public Task<T> Update<T>(string table, T record, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<T> Query<T>(string query, IEnumerable<KeyValuePair<string, string>> parameters, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
+        return await response.ProcessArrayResponse<T>(cancellationToken);
     }
 }
