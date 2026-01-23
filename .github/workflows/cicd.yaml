@@ -3,13 +3,17 @@ name: .NET Build, Test & Publish
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v*" ]      # Triggers publish on tags like v1.0.0
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    
+    # PERMISSION REQUIRED: This allows the action to create the Release page
+    permissions:
+      contents: write 
 
     steps:
     - uses: actions/checkout@v4
@@ -17,7 +21,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x # Targets the latest .NET 10 (Jan 2026 standard)
+        dotnet-version: 10.0.x
 
     - name: Set Version
       id: vars
@@ -35,16 +39,27 @@ jobs:
       run: dotnet restore
 
     - name: Build
+      # Bakes version into DLL file properties
       run: dotnet build --no-restore --configuration Release -p:Version=${{ steps.vars.outputs.ver }}
 
     - name: Test
+      # Runs only the specified Unit Test project
       run: dotnet test ./tests/Surreal.Client.Rest.Test.Unit/Surreal.Client.Rest.Test.Unit.csproj --no-build --configuration Release --verbosity normal
 
-    # --- PUBLISH STEP (Only runs on tags) ---
+    # --- PUBLISHING STEPS (Only run on tags) ---
+    
     - name: Pack
       if: startsWith(github.ref, 'refs/tags/v')
+      # Explicitly pointing to the library project ensures we don't pack the tests
       run: dotnet pack ./src/Surreal.Client.Rest/Surreal.Client.Rest.csproj --no-build --configuration Release --output ./nupkgs -p:Version=${{ steps.vars.outputs.ver }}
 
     - name: Push to NuGet
       if: startsWith(github.ref, 'refs/tags/v')
       run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./nupkgs/*.nupkg      # Attaches the package to the release
+        generate_release_notes: true  # Auto-generates changelog from PRs
