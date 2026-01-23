@@ -1,19 +1,45 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Surreal.Client.Rest.Model;
+using Surreal.Client.Rest.Serialisation;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Surreal.Client.Rest;
 
-public class SurrealRestClient(HttpClient client, IOptions<SurrealRestOptions> options) : ISurrealRestClient
+public class SurrealRestClient : ISurrealRestClient
 {
-    private readonly JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
-    private JwtSecurityToken? _token = null;
+    private readonly HttpClient client;
+    private readonly IOptions<SurrealRestOptions> options;
+    private readonly JsonSerializerOptions jsonOptions;
 
-    public Uri Uri { get; } = new Uri(options.Value.Endpoint);
+    public SurrealRestClient(HttpClient client, IOptions<SurrealRestOptions> options)
+    {
+        this.client = client;
+        this.options = options;
+        Uri = new Uri(options.Value.Endpoint);
+
+        if (options.Value.SurrealIdOptions.HasFlag(SurrealIdOptions.ExposeSurrealIds))
+        {
+            jsonOptions = new JsonSerializerOptions
+            {
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver
+                {
+                    Modifiers = { InterceptId.Intercept }
+                }
+            };
+        }
+        else
+        {
+            jsonOptions = new JsonSerializerOptions();
+        }
+    }
+
+    public Uri Uri { get; }
     
+
     public void Dispose()
     {
     }
@@ -60,7 +86,7 @@ public class SurrealRestClient(HttpClient client, IOptions<SurrealRestOptions> o
 
     public async Task<SurrealHttpResponse<T>> Get<T>(string table, string id, CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/key/{table}");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/key/{table}/{id}");
         
         using var response = await client.SendAsync(request, cancellationToken);
         return await response.ProcessResponse<T>(cancellationToken);

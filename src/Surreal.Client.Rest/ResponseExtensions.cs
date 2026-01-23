@@ -40,9 +40,13 @@ internal static class ResponseExtensions
         {
             return SurrealHttpResponse<T>.Failure("Failed to get response", response.StatusCode);
         }
-        
-        using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var responseObject = await JsonSerializer.DeserializeAsync<Response<T>[]>(responseStream, cancellationToken: cancellationToken);
+
+        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseObject = JsonSerializer.Deserialize<Response<T>[]>(responseString);
+
+
+        //using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        //var responseObject = await JsonSerializer.DeserializeAsync<Response<T>[]>(responseStream, cancellationToken: cancellationToken);
 
         if (responseObject == null)
         {

@@ -22,6 +22,7 @@ public static class SurrealRestClientExtensions
             var options = serviceProvider.GetRequiredService<IOptions<SurrealRestOptions>>().Value;
 
             client.BaseAddress = new Uri(options.Endpoint);
+            client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
         });
 
         services.AddTransient<AuthHeaderHandler>();
@@ -32,6 +33,7 @@ public static class SurrealRestClientExtensions
             var options = serviceProvider.GetRequiredService<IOptions<SurrealRestOptions>>().Value;
 
             client.BaseAddress = new Uri(options.Endpoint);
+            client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             client.DefaultRequestHeaders.Add(HeaderNames.Namespace, options.Namespace);
             client.DefaultRequestHeaders.Add(HeaderNames.Database, options.Database);
         }).AddHttpMessageHandler<AuthHeaderHandler>();
