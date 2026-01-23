@@ -1,0 +1,1 @@
+[![Build Status](https://github.com/davojc/Surreal.Client.Rest/actions/workflows/cicd.yaml/badge.svg)](https://github.com/davojc/Surreal.Client.Rest/actions/workflows/cicd.yaml)
