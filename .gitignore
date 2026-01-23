@@ -57,3 +57,6 @@ nunit-*.xml
 # Visual Studio
 /.vs
 *.user
+
+# Jetbrains
+/.idea
