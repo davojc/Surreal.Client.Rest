@@ -1,5 +1,8 @@
 ﻿namespace Surreal.Client.Rest;
 
+/// <summary>
+/// The main SurrealRestClient interface. It is not one to one with the SurrealDB Client as that exposes more than the endpoints.
+/// </summary>
 public interface ISurrealRestClient : IDisposable
 {
     public Uri Uri { get; }

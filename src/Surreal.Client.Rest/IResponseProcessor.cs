@@ -2,6 +2,9 @@
 
 namespace Surreal.Client.Rest;
 
+/// <summary>
+/// You should have no reason to implement this yourself. It is here to help with Logging and DI. 
+/// </summary>
 public interface IResponseProcessor
 {
     Task<SurrealHttpArrayResponse<T>> ProcessArrayResponse<T>(HttpResponseMessage response, JsonSerializerOptions options, CancellationToken cancellationToken = default);

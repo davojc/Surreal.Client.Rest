@@ -15,6 +15,10 @@ public abstract class SurrealHttpResponseBase
     protected abstract bool HasData();
 }
 
+/// <summary>
+/// Returned when the result is expected to be a single value.
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class SurrealHttpResponse<T> : SurrealHttpResponseBase
 {
     public T? Data { get; init; }
@@ -37,6 +41,10 @@ public sealed class SurrealHttpResponse<T> : SurrealHttpResponseBase
     }
 }
 
+/// <summary>
+/// Returned when the result is expected to be an array.
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public sealed class SurrealHttpArrayResponse<T> : SurrealHttpResponseBase
 {
     public T[]? Data { get; init; }
