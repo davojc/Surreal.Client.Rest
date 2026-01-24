@@ -30,29 +30,14 @@ public partial class SurrealRestClient : ISurrealRestClient
         }
         else
         {
-            if(options.Value.SurrealIdOptions.HasFlag(SurrealIdOptions.Optimise))
+            jsonOptions = new JsonSerializerOptions
             {
-                jsonOptions = new JsonSerializerOptions
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver
                 {
-                    TypeInfoResolver = new DefaultJsonTypeInfoResolver
-                    {
-                        Modifiers = { InterceptId.Intercept }
-                    }
-                };
-            }
-            else
-            {
-                jsonOptions = new JsonSerializerOptions
-                {
-                    TypeInfoResolver = new DefaultJsonTypeInfoResolver
-                    {
-                        Modifiers = { InterceptId.InterceptOptimised }
-                    }
-                };
-            }
+                    Modifiers = { InterceptId.Intercept }
+                }
+            };
         }
-
-
     }
 
     public Uri Uri { get; }

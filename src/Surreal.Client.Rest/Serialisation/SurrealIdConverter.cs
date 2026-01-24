@@ -7,13 +7,11 @@ internal class SurrealIdConverter : JsonConverter<string>
 {
     private readonly string _prefix;
     private readonly int _prefixLen;
-    private readonly bool _optimise;
 
-    public SurrealIdConverter(string tableName, bool optimise = true)
+    public SurrealIdConverter(string tableName)
     {
         _prefix = tableName + ":";
         _prefixLen = _prefix.Length;
-        this._optimise = optimise;
     }
 
     public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -26,28 +24,16 @@ internal class SurrealIdConverter : JsonConverter<string>
         if (string.IsNullOrEmpty(value))
             return value;
 
-        if (_optimise)
+        ReadOnlySpan<char> valSpan = value.AsSpan();
+        ReadOnlySpan<char> prefixSpan = _prefix.AsSpan();
+
+        if (valSpan.Length > _prefixLen &&
+            valSpan.StartsWith(prefixSpan, StringComparison.OrdinalIgnoreCase))
         {
-            ReadOnlySpan<char> valSpan = value.AsSpan();
-            ReadOnlySpan<char> prefixSpan = _prefix.AsSpan();
-
-            if (valSpan.Length > _prefixLen &&
-                valSpan.StartsWith(prefixSpan, StringComparison.OrdinalIgnoreCase))
-            {
-                return valSpan.Slice(_prefixLen).ToString();
-            }
-
-            return value;
+            return valSpan.Slice(_prefixLen).ToString();
         }
-        else
-        {
-            if (value.StartsWith(_prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                return value.Substring(_prefix.Length);
-            }
 
-            return value;
-        }
+        return value;
     }
 
     public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
@@ -58,38 +44,24 @@ internal class SurrealIdConverter : JsonConverter<string>
             return;
         }
 
-        if (_optimise)
+        ReadOnlySpan<char> valSpan = value.AsSpan();
+        ReadOnlySpan<char> prefixSpan = _prefix.AsSpan();
+
+        if (valSpan.Length >= _prefixLen &&
+            valSpan.StartsWith(prefixSpan, StringComparison.OrdinalIgnoreCase))
         {
-            ReadOnlySpan<char> valSpan = value.AsSpan();
-            ReadOnlySpan<char> prefixSpan = _prefix.AsSpan();
-
-            if (valSpan.Length >= _prefixLen &&
-                valSpan.StartsWith(prefixSpan, StringComparison.OrdinalIgnoreCase))
-            {
-                writer.WriteStringValue(valSpan);
-                return;
-            }
-
-            int requiredLength = _prefixLen + valSpan.Length;
-
-            Span<char> buffer = requiredLength <= 256
-                ? stackalloc char[requiredLength]
-                : new char[requiredLength];
-
-            prefixSpan.CopyTo(buffer);
-            valSpan.CopyTo(buffer.Slice(_prefixLen));
-            writer.WriteStringValue(buffer);
+            writer.WriteStringValue(valSpan);
+            return;
         }
-        else
-        {
-            if (value.StartsWith(_prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                writer.WriteStringValue(value);
-            }
-            else
-            {
-                writer.WriteStringValue($"{_prefix}{value}");
-            }
-        }
+
+        int requiredLength = _prefixLen + valSpan.Length;
+
+        Span<char> buffer = requiredLength <= 256
+            ? stackalloc char[requiredLength]
+            : new char[requiredLength];
+
+        prefixSpan.CopyTo(buffer);
+        valSpan.CopyTo(buffer.Slice(_prefixLen));
+        writer.WriteStringValue(buffer);
     }
 }

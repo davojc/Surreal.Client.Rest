@@ -8,28 +8,18 @@ internal static class InterceptId
 {
     public static void Intercept(JsonTypeInfo typeInfo)
     {
-        InterceptCommon(typeInfo, false);
-    }
-
-    public static void InterceptOptimised(JsonTypeInfo typeInfo)
-    {
-        InterceptCommon(typeInfo, true);
-    }
-
-    private static void InterceptCommon(JsonTypeInfo typeInfo, bool optimise)
-    {
         var tableAttr = typeInfo.Type.GetCustomAttribute<TableAttribute>();
 
         if (tableAttr == null) return;
 
-        foreach(var property in typeInfo.Properties)
+        foreach (var property in typeInfo.Properties)
         {
             if (property.PropertyType != typeof(string))
                 continue;
 
-            if(string.Equals(property.Name, "id", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(property.Name, "id", StringComparison.OrdinalIgnoreCase))
             {
-                property.CustomConverter = new SurrealIdConverter(tableAttr.Name, optimise);
+                property.CustomConverter = new SurrealIdConverter(tableAttr.Name);
                 continue;
             }
 
@@ -46,7 +36,7 @@ internal static class InterceptId
 
             var tableName = fieldAttribute.Parent.GetTableName();
 
-            property.CustomConverter = new SurrealIdConverter(tableName, optimise);
+            property.CustomConverter = new SurrealIdConverter(tableName);
         }
     }
 }
