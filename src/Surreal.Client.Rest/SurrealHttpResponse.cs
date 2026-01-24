@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Surreal.Client.Rest.Model;
+namespace Surreal.Client.Rest;
 
 public abstract class SurrealHttpResponseBase
 {

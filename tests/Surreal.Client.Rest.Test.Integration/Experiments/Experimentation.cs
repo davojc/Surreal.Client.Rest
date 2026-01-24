@@ -1,9 +1,5 @@
-﻿using Surreal.Client.Rest.Serialisation;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.Json;
+﻿using Surreal.Client.Rest.Metadata;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace Surreal.Client.Rest.Test.Integration.Experiments;
 

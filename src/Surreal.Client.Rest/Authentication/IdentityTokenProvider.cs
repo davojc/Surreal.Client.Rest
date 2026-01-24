@@ -1,8 +1,8 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 
-namespace Surreal.Client.Rest;
+namespace Surreal.Client.Rest.Authentication;
 
-internal class IdentityTokenProvider(IIdentityClient client) : IIdentityTokenProvider
+internal class IdentityTokenProvider(IAuthenticationClient client) : IIdentityTokenProvider
 {
     private JwtSecurityToken? _token = null;
     private string? _tokenString = null;

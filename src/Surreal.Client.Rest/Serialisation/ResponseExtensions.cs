@@ -1,12 +1,15 @@
-﻿using System.Net;
+﻿using Surreal.Client.Rest.Model;
+using System.Net;
 using System.Text.Json;
-using Surreal.Client.Rest.Model;
 
-namespace Surreal.Client.Rest;
+namespace Surreal.Client.Rest.Serialisation;
+
+
+/*
 
 internal static class ResponseExtensions
 {
-    public static async Task<SurrealHttpArrayResponse<T>> ProcessArrayResponse<T>(this HttpResponseMessage response, CancellationToken cancellationToken = default)
+    public static async Task<SurrealHttpArrayResponse<T>> ProcessArrayResponse<T>(this HttpResponseMessage response, JsonSerializerOptions options, CancellationToken cancellationToken = default)
     {
         if (response.StatusCode == HttpStatusCode.Forbidden)
         {
@@ -19,7 +22,7 @@ internal static class ResponseExtensions
         }
         
         using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var responseObject = await JsonSerializer.DeserializeAsync<Response<T>[]>(responseStream, cancellationToken: cancellationToken);
+        var responseObject = await JsonSerializer.DeserializeAsync<Response<T>[]>(responseStream, options, cancellationToken: cancellationToken);
 
         if (responseObject == null)
         {
@@ -29,7 +32,7 @@ internal static class ResponseExtensions
         return SurrealHttpArrayResponse<T>.Success(responseObject.First().Result, response.StatusCode);
     }
     
-    public static async Task<SurrealHttpResponse<T>> ProcessResponse<T>(this HttpResponseMessage response, CancellationToken cancellationToken = default)
+    public static async Task<SurrealHttpResponse<T>> ProcessResponse<T>(this HttpResponseMessage response, JsonSerializerOptions options, CancellationToken cancellationToken = default)
     {
         if (response.StatusCode == HttpStatusCode.Forbidden)
         {
@@ -42,7 +45,7 @@ internal static class ResponseExtensions
         }
 
         var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
-        var responseObject = JsonSerializer.Deserialize<Response<T>[]>(responseString);
+        var responseObject = JsonSerializer.Deserialize<Response<T>[]>(responseString, options);
 
 
         //using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -67,3 +70,4 @@ internal static class ResponseExtensions
         return SurrealHttpResponse<bool>.Failure(error ?? "Status code was not OK,", response.StatusCode);
     }
 }
+*/

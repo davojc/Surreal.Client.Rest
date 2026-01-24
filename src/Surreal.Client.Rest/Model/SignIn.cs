@@ -14,11 +14,11 @@ internal class SignIn
     
     [JsonPropertyName("user")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string Username { get; set; }
+    public string? Username { get; set; }
     
     [JsonPropertyName("pass")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string Password { get; set; }
+    public string? Password { get; set; }
 }
 
 internal static class Extensions

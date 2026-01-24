@@ -3,9 +3,9 @@ using Surreal.Client.Rest.Model;
 using System.Text;
 using System.Text.Json;
 
-namespace Surreal.Client.Rest;
+namespace Surreal.Client.Rest.Authentication;
 
-internal class IdentityClient(HttpClient client, IOptions<SurrealRestOptions> options) : IIdentityClient
+internal class AuthenticationClient(HttpClient client, IOptions<SurrealRestOptions> options) : IAuthenticationClient
 {
     
 
@@ -21,7 +21,7 @@ internal class IdentityClient(HttpClient client, IOptions<SurrealRestOptions> op
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var authentication = JsonSerializer.Deserialize<Authentication>(content);
+        var authentication = JsonSerializer.Deserialize<Auth>(content);
 
         if (authentication == null)
         {

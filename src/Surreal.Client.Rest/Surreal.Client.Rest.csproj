@@ -7,8 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<Compile Update="SurrealRestClient.Logging.cs">
+		<DependentUpon>SurrealRestClient.cs</DependentUpon>
+	</Compile>
+	  <Compile Update="Serialisation\ResponseProcessor.Logging.cs">
+		  <DependentUpon>ResponseProcessor.cs</DependentUpon>
+	  </Compile>
+</ItemGroup>
+
+
+	<ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.2" />
-    <PackageReference Include="SurrealDb.Net" Version="0.9.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 

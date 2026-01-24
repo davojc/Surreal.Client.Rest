@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Surreal.Client.Rest.Metadata;
+using System.Reflection;
 using System.Text.Json.Serialization.Metadata;
 
 namespace Surreal.Client.Rest.Serialisation;
@@ -7,17 +8,45 @@ internal static class InterceptId
 {
     public static void Intercept(JsonTypeInfo typeInfo)
     {
+        InterceptCommon(typeInfo, false);
+    }
+
+    public static void InterceptOptimised(JsonTypeInfo typeInfo)
+    {
+        InterceptCommon(typeInfo, true);
+    }
+
+    private static void InterceptCommon(JsonTypeInfo typeInfo, bool optimise)
+    {
         var tableAttr = typeInfo.Type.GetCustomAttribute<TableAttribute>();
 
         if (tableAttr == null) return;
 
-        var idProp = typeInfo.Properties
-            .FirstOrDefault(p => p.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
-
-        if (idProp != null && idProp.PropertyType == typeof(string))
+        foreach(var property in typeInfo.Properties)
         {
-            // Pass the table name from the attribute to the converter
-            idProp.CustomConverter = new SurrealIdConverter(tableAttr.Name);
+            if (property.PropertyType != typeof(string))
+                continue;
+
+            if(string.Equals(property.Name, "id", StringComparison.OrdinalIgnoreCase))
+            {
+                property.CustomConverter = new SurrealIdConverter(tableAttr.Name, optimise);
+                continue;
+            }
+
+            if (property.AttributeProvider?.IsDefined(typeof(IdFieldAttribute), inherit: false) != true)
+                continue;
+
+
+            var fieldAttribute = property.AttributeProvider
+                                   .GetCustomAttributes(typeof(IdFieldAttribute), false)
+                                   .FirstOrDefault() as IdFieldAttribute;
+
+            if (fieldAttribute == null)
+                continue;
+
+            var tableName = fieldAttribute.Parent.GetTableName();
+
+            property.CustomConverter = new SurrealIdConverter(tableName, optimise);
         }
     }
 }

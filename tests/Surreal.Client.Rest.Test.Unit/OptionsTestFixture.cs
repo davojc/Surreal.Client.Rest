@@ -18,7 +18,9 @@ public class OptionsTestFixture : IDisposable
 
     public string CreateMockPath(string suffix)
     {
-        return $"{endPoint}/{suffix}";
+        var trimmed = suffix.TrimStart('/');
+
+        return $"{endPoint}/{trimmed}";
     }
 
     public (MockHttpMessageHandler handler, string token) GetMockHandler()
@@ -37,7 +39,7 @@ public class OptionsTestFixture : IDisposable
         return (mockHttp, signinResponse.token);
     }
 
-    public ISurrealRestClient GetClient(MockHttpMessageHandler handler)
+    public ISurrealRestClient GetClient(MockHttpMessageHandler handler, bool exposeSurrealId = false)
     {
         var services = new ServiceCollection();
         services.AddSurrealRestClient(options =>
@@ -47,6 +49,7 @@ public class OptionsTestFixture : IDisposable
             options.Password = "root";
             options.Username = "root";
             options.Endpoint = endPoint;
+            options.SurrealIdOptions = exposeSurrealId ? SurrealIdOptions.ExposeSurrealIds : SurrealIdOptions.None;
         });
 
         services.ConfigureAll<HttpClientFactoryOptions>(options =>

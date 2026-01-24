@@ -1,13 +1,5 @@
 ﻿namespace Surreal.Client.Rest;
 
-[Flags]
-public enum SurrealIdOptions
-{
-    None = 0,
-    ExposeSurrealIds = 1,
-    Optimise = 2
-}
-
 public sealed class SurrealRestOptions
 {
     public SurrealRestOptions()
@@ -38,6 +30,12 @@ public sealed class SurrealRestOptions
     /// If false (default) you can simply use ids and the Client will insert/remove the table name. Optimise optimises these transformations but cannot be used if the SurrealId is > 256 characters.
     /// </summary>
     public SurrealIdOptions SurrealIdOptions { get; set; } = SurrealIdOptions.None;
+
+
+    /// <summary>
+    /// If this is set to true then responses will be logged. Should help understanding what is going on.
+    /// </summary>
+    public bool Debug { get; set; } = false;
 
    
     public static SurrealRestOptionsBuilder Create()

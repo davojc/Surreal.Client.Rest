@@ -1,6 +1,6 @@
-﻿namespace Surreal.Client.Rest;
+﻿namespace Surreal.Client.Rest.Authentication;
 
-public class AuthHeaderHandler(IIdentityTokenProvider tokenProvider) : DelegatingHandler
+internal class AuthHeaderHandler(IIdentityTokenProvider tokenProvider) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
